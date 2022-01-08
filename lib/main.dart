@@ -1,8 +1,12 @@
+import 'package:catdiet/gaugeChart.dart';
 import 'package:flutter/material.dart';
 import 'package:googleapis/sheets/v4.dart';
 import 'package:googleapis_auth/googleapis_auth.dart' as auth show AuthClient;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
+import 'package:charts_flutter/flutter.dart' as charts;
+import 'gaugeChart.dart';
+import 'line_range_annotation.dart';
 
 void main() {
   runApp(const MyApp());
@@ -138,6 +142,14 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           const Text('Signed in successfully.'),
           Text(_sheetText),
+          // ConstrainedBox(
+          //     constraints: BoxConstraints.tight(Size.fromHeight(500)),
+          //     child: GaugeChart.withSampleData()
+          // ),
+          ConstrainedBox(
+              constraints: BoxConstraints.tight(Size.fromHeight(300)),
+              child: LineRangeAnnotationChart.withSampleData()
+          ),
           ElevatedButton(
             child: const Text('SIGN OUT'),
             onPressed: _handleSignOut,
