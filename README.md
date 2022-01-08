@@ -2,6 +2,8 @@
 
 A tracker for feeding our cats
 
+[![Cat Diet Tracker figma mockup](https://user-images.githubusercontent.com/4853935/148662983-0fdc2247-fe19-47b9-892e-7abb2a558daf.png 'Cat Diet Tracker figma mockup')](https://www.figma.com/proto/wPceof8zNCysyh9e46TPw0/CatDiet?node-id=4%3A212&scaling=min-zoom&page-id=0%3A1&starting-point-node-id=4%3A212)
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
