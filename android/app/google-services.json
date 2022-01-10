@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "320291888473",
+    "project_id": "catdiet-a3778",
+    "storage_bucket": "catdiet-a3778.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:320291888473:android:b36e64e336dca222e44048",
+        "android_client_info": {
+          "package_name": "com.cktbkr.catdiet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "320291888473-2i39cu3m1vd50n7toh80m04ukl4iguv1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cktbkr.catdiet",
+            "certificate_hash": "cc95b7aaf908283fe182dbb9f298536d6f2e214d"
+          }
+        },
+        {
+          "client_id": "320291888473-j70rt3bguqs44rtkspvk0t9v8be11vlv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOD8Y7xrGiNtcjic5tCTY4Y82Na7-ib4g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "320291888473-j70rt3bguqs44rtkspvk0t9v8be11vlv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

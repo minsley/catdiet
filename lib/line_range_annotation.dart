@@ -14,7 +14,7 @@ class LineRangeAnnotationChart extends StatelessWidget {
   /// demonstrating the effect of the [Charts.RangeAnnotation.extendAxis] flag.
   /// This can be set to false to disable range extension.
   factory LineRangeAnnotationChart.withSampleData() {
-    return new LineRangeAnnotationChart(
+    return LineRangeAnnotationChart(
       _createSampleData(),
       // Disable animations for image tests.
       animate: false,
@@ -24,42 +24,49 @@ class LineRangeAnnotationChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new charts.LineChart(List.from(seriesList), animate: animate, behaviors: [
-      new charts.RangeAnnotation([
-        new charts.RangeAnnotationSegment(
-            0.5, 1.0, charts.RangeAnnotationAxisType.domain,
-            startLabel: 'Domain 1'),
-        new charts.RangeAnnotationSegment(
-            2, 4, charts.RangeAnnotationAxisType.domain,
-            endLabel: 'Domain 2', color: charts.MaterialPalette.gray.shade200),
-        new charts.RangeAnnotationSegment(
-            15, 20, charts.RangeAnnotationAxisType.measure,
-            startLabel: 'Measure 1 Start',
-            endLabel: 'Measure 1 End',
-            color: charts.MaterialPalette.gray.shade300),
-        new charts.RangeAnnotationSegment(
-            35, 65, charts.RangeAnnotationAxisType.measure,
-            startLabel: 'Measure 2 Start',
-            endLabel: 'Measure 2 End',
-            color: charts.MaterialPalette.gray.shade400),
+    // return charts.LineChart(List.from(seriesList), animate: animate, behaviors: [
+    //   charts.RangeAnnotation([
+    //     charts.RangeAnnotationSegment(
+    //         190, 220, charts.RangeAnnotationAxisType.measure,
+    //         labelPosition: charts.AnnotationLabelPosition.outside,
+    //         startLabel: '190',
+    //         endLabel: '220',
+    //         color: charts.Color.fromHex(code: '#DFF4DA'))
+    //   ]),
+    // ]);
+    return charts.TimeSeriesChart(List.from(seriesList), animate: animate, behaviors: [
+      charts.RangeAnnotation([
+        charts.RangeAnnotationSegment(
+            190, 220, charts.RangeAnnotationAxisType.measure,
+            labelPosition: charts.AnnotationLabelPosition.outside,
+            startLabel: '190',
+            endLabel: '220',
+            color: charts.Color.fromHex(code: '#DFF4DA'))
       ]),
-    ]);
+    ],
+    primaryMeasureAxis: const charts.NumericAxisSpec(
+        tickProviderSpec: charts.BasicNumericTickProviderSpec(desiredTickCount: 2), showAxisLine: true
+    ),
+    domainAxis: const charts.DateTimeAxisSpec(
+        tickProviderSpec: charts.AutoDateTimeTickProviderSpec(),
+      // tickFormatterSpec: charts.AutoDateTimeTickFormatterSpec()
+    ));
   }
 
   /// Create one series with sample hard coded data.
-  static List<charts.Series<LinearSales, int>> _createSampleData() {
+  static List<charts.Series<Datum, DateTime>> _createSampleData() {
     final data = [
-      new LinearSales(0, 5),
-      new LinearSales(1, 25),
-      new LinearSales(2, 100),
-      new LinearSales(3, 75),
+      Datum(DateTime.now(), 5),
+      Datum(DateTime.now().subtract(Duration(days: 1)), 25),
+      Datum(DateTime.now().subtract(Duration(days: 2)), 100),
+      Datum(DateTime.now().subtract(Duration(days: 3)), 75),
     ];
 
     return [
-      new charts.Series<LinearSales, int>(
+      charts.Series<Datum, DateTime>(
         id: 'Sales',
-        domainFn: (LinearSales sales, _) => sales.year,
-        measureFn: (LinearSales sales, _) => sales.sales,
+        domainFn: (Datum datum, _) => datum.date,
+        measureFn: (Datum datum, _) => datum.value,
         data: data,
       )
     ];
@@ -67,9 +74,9 @@ class LineRangeAnnotationChart extends StatelessWidget {
 }
 
 /// Sample linear data type.
-class LinearSales {
-  final int year;
-  final int sales;
+class Datum {
+  final DateTime date;
+  final int value;
 
-  LinearSales(this.year, this.sales);
+  Datum(this.date, this.value);
 }

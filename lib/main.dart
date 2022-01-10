@@ -1,12 +1,23 @@
+import 'dart:ui';
+
 import 'package:catdiet/gaugeChart.dart';
+import 'package:catdiet/profile_row.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:googleapis/sheets/v4.dart';
+import 'package:googleapis/vision/v1.dart';
 import 'package:googleapis_auth/googleapis_auth.dart' as auth show AuthClient;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'CatData.dart';
+import 'barChart.dart';
 import 'gaugeChart.dart';
 import 'line_range_annotation.dart';
+import 'package:flutter/foundation.dart';
+// import 'package:syncfusion_flutter_charts/charts.dart';
+// import 'package:syncfusion_flutter_charts/sparkcharts.dart';
+import 'package:syncfusion_flutter_gauges/gauges.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,22 +30,23 @@ final _googleSignIn = GoogleSignIn(
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
+// This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
+// This is the theme of your application.
+//
+// Try running your application with "flutter run". You'll see the
+// application has a blue toolbar. Then, without quitting the app, try
+// changing the primarySwatch below to Colors.green and then invoke
+// "hot reload" (press "r" in the console where you ran "flutter run",
+// or simply save your changes to "hot reload" in a Flutter IDE).
+// Notice that the counter didn't reset back to zero; the application
+// is not restarted.
         primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
@@ -44,14 +56,14 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
+// This widget is the home page of your application. It is stateful, meaning
+// that it has a State object (defined below) that contains fields that affect
+// how it looks.
 
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+// This class is the configuration for the state. It holds the values (in this
+// case the title) provided by the parent (in this case the App widget) and
+// used by the build method of the State. Fields in a Widget subclass are
+// always marked "final".
 
   final String title;
 
@@ -63,6 +75,10 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   GoogleSignInAccount? _currentUser;
   String _sheetText = '';
+
+  List<Food> _foods = [];
+  CatProfile _kashi = CatProfile(Cat.Kashi, 0, 0, []);
+  CatProfile _batman = CatProfile(Cat.Batman, 0, 0, []);
 
   @override
   void initState() {
@@ -97,15 +113,24 @@ class _MyHomePageState extends State<MyHomePage> {
     final auth.AuthClient? client = await _googleSignIn.authenticatedClient();
 
     assert(client != null, 'Authenticated client missing!');
-    
+
     final SheetsApi sheetsApi = SheetsApi(client!);
     final Spreadsheet sheet = await sheetsApi.spreadsheets.get(
         '10491Rx3qiDDSK4kRvSXOR9VWNVumRQImyeYnq7Q89-s',
         includeGridData: true,
-        ranges: ['\'Nutrition History\'!F29:G31']
+        ranges: [
+          '\'Nutrition History\'!F30:G31', // [[B lo, K lo],[B hi, K hi]]
+          '\'Nutrition History\'!A3:C40', // [[Date, B, K],[Date2, B, K],...]
+          '\'Food List\'!A2:T100',
+        ]
     );
 
-    final String? sheetString = sheet.toJson().toString();
+    final String? sheetString = json.encode(sheet);
+
+    var data = CatData.parse(sheet);
+    _kashi = data.cats[0];
+    _batman = data.cats[1];
+    _foods = data.foods;
 
     setState(() {
       if (sheetString != null) {
@@ -116,49 +141,61 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
   Widget _buildBody() {
     final GoogleSignInAccount? user = _currentUser;
+
+    // return Center(child: Expanded(child: Text(_sheetText)));
+
     if (user != null) {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: <Widget>[
-          ListTile(
-            leading: GoogleUserCircleAvatar(
-              identity: user,
-            ),
-            title: Text(user.displayName ?? ''),
-            subtitle: Text(user.email),
+      return Center(
+        child: Stack(children: [
+          Container(
+              alignment: Alignment.topRight,
+              padding: const EdgeInsets.only(top: 10, right: 10),
+              child: PopupMenuButton(
+                  itemBuilder: (BuildContext context) =>
+                  <PopupMenuEntry>[
+                    PopupMenuItem(
+                        child: ListTile(
+                            leading: GoogleUserCircleAvatar(
+                              identity: user,
+                            ),
+                            title: Text(user.displayName ?? ''),
+                            subtitle: Text(user.email)
+                        )
+                    ),
+                    const PopupMenuDivider(),
+                    PopupMenuItem(
+                      child: const Text('Refresh'),
+                      onTap: _handleGetSheet,
+                    ),
+                    PopupMenuItem(
+                      child: const Text('Sign out', textAlign: TextAlign.center),
+                      onTap: _handleSignOut,
+                    )
+                  ])),
+          Container(
+            margin: const EdgeInsets.all(50),
+            child: Column(children: [
+              ProfileRow(_kashi),
+              Container(height: 30),
+              ProfileRow(_batman)
+            ]),
           ),
-          const Text('Signed in successfully.'),
-          Text(_sheetText),
-          // ConstrainedBox(
-          //     constraints: BoxConstraints.tight(Size.fromHeight(500)),
-          //     child: GaugeChart.withSampleData()
-          // ),
-          ConstrainedBox(
-              constraints: BoxConstraints.tight(Size.fromHeight(300)),
-              child: LineRangeAnnotationChart.withSampleData()
-          ),
-          ElevatedButton(
-            child: const Text('SIGN OUT'),
-            onPressed: _handleSignOut,
-          ),
-          ElevatedButton(
-            child: const Text('REFRESH'),
-            onPressed: _handleGetSheet,
-          ),
-        ],
+          Container(
+            alignment: Alignment.bottomRight,
+            margin: const EdgeInsets.only(bottom: 20, right: 20),
+            child: FloatingActionButton.extended(
+              label: Row(children: [
+                const Icon(Icons.add_circle_rounded, size: 40),
+                Container(width: 10),
+                const Text("Add Meal", style: TextStyle(fontSize: 20)),
+              ]),
+                onPressed: null,
+              // child: ,
+            )
+          )
+        ]),
       );
     } else {
       return Column(
@@ -177,63 +214,16 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('Google Sign In'),
-        ),
         body: ConstrainedBox(
           constraints: const BoxConstraints.expand(),
           child: _buildBody(),
         ));
   }
+}
 
-  // @override
-  // Widget build(BuildContext context) {
-  //   // This method is rerun every time setState is called, for instance as done
-  //   // by the _incrementCounter method above.
-  //   //
-  //   // The Flutter framework has been optimized to make rerunning build methods
-  //   // fast, so that you can just rebuild anything that needs updating rather
-  //   // than having to individually change instances of widgets.
-  //
-  //   return Scaffold(
-  //     appBar: AppBar(
-  //       title: Text(widget.title),
-  //     ),
-  //     body: Center(
-  //       // Center is a layout widget. It takes a single child and positions it
-  //       // in the middle of the parent.
-  //       child: Column(
-  //         // Column is also a layout widget. It takes a list of children and
-  //         // arranges them vertically. By default, it sizes itself to fit its
-  //         // children horizontally, and tries to be as tall as its parent.
-  //         //
-  //         // Invoke "debug painting" (press "p" in the console, choose the
-  //         // "Toggle Debug Paint" action from the Flutter Inspector in Android
-  //         // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-  //         // to see the wireframe for each widget.
-  //         //
-  //         // Column has various properties to control how it sizes itself and
-  //         // how it positions its children. Here we use mainAxisAlignment to
-  //         // center the children vertically; the main axis here is the vertical
-  //         // axis because Columns are vertical (the cross axis would be
-  //         // horizontal).
-  //         mainAxisAlignment: MainAxisAlignment.center,
-  //         children: <Widget>[
-  //           const Text(
-  //             'You have pushed the button this many times:',
-  //           ),
-  //           Text(
-  //             '$_counter',
-  //             style: Theme.of(context).textTheme.headline4,
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //     floatingActionButton: FloatingActionButton(
-  //       onPressed: _incrementCounter,
-  //       tooltip: 'Increment',
-  //       child: const Icon(Icons.add),
-  //     ), // This trailing comma makes auto-formatting nicer for build methods.
-  //   );
-  // }
+class Datum {
+  final DateTime date;
+  final int value;
+
+  Datum(this.date, this.value);
 }
