@@ -39,24 +39,25 @@ class CatData {
       sheet.sheets?.last.data?.first.rowData
         ?.where((r) => parseString(r, 0).isNotEmpty)
         .map((r) => Food(
-        parseString(r, 0),  // brand
-        parseString(r, 1),  // line
-        parseString(r, 2),  // variety,
-        parseString(r, 3),  // mainIngredient,
-        parseString(r, 4),  // shape,
-        parseFoodType(r, 5),  // type,
-        parseDouble(r, 6),  // packageOz,
-        parseDouble(r, 7),  // packageKcal,
-        parseDouble(r, 8),  // kcalPerKg,
-        parseCurrency(r, 9),  // packageCost,
-        parseDouble(r, 10),  // kcalPerOz,
-        parseCurrency(r, 11),  // costPerOz,
-        parseCurrency(r, 12),  // costPer100Kcal,
-        parseString(r, 13),  // foodNotes,
-        parseString(r, 14),  // feedingNotes,
-        parseString(r, 15),  // fullIngredients,
-        parseUri(r, 18),  // canPicUri,
-        parseUri(r, 19)))  // foodPicUri
+          parseString(r, 0),  // brand
+          parseString(r, 1),  // line
+          parseString(r, 2),  // variety,
+          parseString(r, 3),  // mainIngredient,
+          parseString(r, 4),  // shape,
+          parseFoodType(r, 5),  // type,
+          parseDouble(r, 6),  // packageOz,
+          parseDouble(r, 7),  // packageKcal,
+          parseDouble(r, 8),  // kcalPerKg,
+          parseCurrency(r, 9),  // packageCost,
+          parseDouble(r, 10),  // kcalPerOz,
+          parseCurrency(r, 11),  // costPerOz,
+          parseCurrency(r, 12),  // costPer100Kcal,
+          parseString(r, 13),  // foodNotes,
+          parseString(r, 14),  // feedingNotes,
+          parseString(r, 15),  // fullIngredients,
+          parseUri(r, 18),  // canPicUri,
+          parseUri(r, 19),  // foodPicUri
+          parseBool(r, 20)))
       .toList() ?? []
     );
   }
@@ -90,6 +91,11 @@ class CatData {
     var dt = DateTime(1900, 1, 1);
     if(r.values == null || r.values!.length < i+1) return dt;
     return dt.add(Duration(days: r.values?.first.effectiveValue?.numberValue?.toInt() ?? 0));
+  }
+
+  static bool parseBool(RowData r, int i) {
+    if(r.values == null || r.values!.length < i+1) return false;
+    return r.values?[i].effectiveValue?.boolValue ?? false;
   }
 }
 
@@ -140,6 +146,7 @@ class Food {
   final String fullIngredients;
   final Uri? canPicUri;
   final Uri? foodPicUri;
+  final bool isInStock;
 
-  Food(this.brand, this.line, this.variety, this.mainIngredients, this.shape, this.type, this.packageOz, this.packageKcal, this.packageCost, this.kcalPerKg, this.kcalPerOz, this.costPerOz, this.costPer100Kcal, this.foodNotes, this.feedingNotes, this.fullIngredients, this.canPicUri, this.foodPicUri);
+  Food(this.brand, this.line, this.variety, this.mainIngredients, this.shape, this.type, this.packageOz, this.packageKcal, this.packageCost, this.kcalPerKg, this.kcalPerOz, this.costPerOz, this.costPer100Kcal, this.foodNotes, this.feedingNotes, this.fullIngredients, this.canPicUri, this.foodPicUri, this.isInStock);
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:catdiet/gaugeChart.dart';
@@ -6,7 +7,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:googleapis/sheets/v4.dart';
 import 'package:googleapis/vision/v1.dart';
-import 'package:googleapis_auth/googleapis_auth.dart' as auth show AuthClient;
+import 'package:googleapis_auth/auth_io.dart';
+import 'package:googleapis_auth/googleapis_auth.dart' as auth;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
@@ -18,14 +20,16 @@ import 'package:flutter/foundation.dart';
 // import 'package:syncfusion_flutter_charts/charts.dart';
 // import 'package:syncfusion_flutter_charts/sparkcharts.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:file_picker/file_picker.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-final _googleSignIn = GoogleSignIn(
-  scopes: <String>[SheetsApi.spreadsheetsScope],
-);
+// final _googleSignIn = GoogleSignIn(
+//   scopes: <String>[SheetsApi.spreadsheetsScope],
+// );
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -36,15 +40,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-// This is the theme of your application.
-//
-// Try running your application with "flutter run". You'll see the
-// application has a blue toolbar. Then, without quitting the app, try
-// changing the primarySwatch below to Colors.green and then invoke
-// "hot reload" (press "r" in the console where you ran "flutter run",
-// or simply save your changes to "hot reload" in a Flutter IDE).
-// Notice that the counter didn't reset back to zero; the application
-// is not restarted.
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
       ),
@@ -56,15 +51,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
 
-// This widget is the home page of your application. It is stateful, meaning
-// that it has a State object (defined below) that contains fields that affect
-// how it looks.
-
-// This class is the configuration for the state. It holds the values (in this
-// case the title) provided by the parent (in this case the App widget) and
-// used by the build method of the State. Fields in a Widget subclass are
-// always marked "final".
-
   final String title;
 
   @override
@@ -72,114 +58,98 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  GoogleSignInAccount? _currentUser;
-  String _sheetText = '';
-
-  List<Food> _foods = [];
-  CatProfile _kashi = CatProfile(Cat.Kashi, 0, 0, []);
-  CatProfile _batman = CatProfile(Cat.Batman, 0, 0, []);
+  final String _credStorageKey = "CatDietServiceCredentials";
+  AuthClient? _client;
+  CatData? _data;
 
   @override
   void initState() {
     super.initState();
-    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount? account) {
-      setState(() {
-        _currentUser = account;
-      });
-      if (_currentUser != null) {
-        _handleGetSheet();
-      }
-    });
-    _googleSignIn.signInSilently();
+    _handleSignIn()
+        .then((value) => _handleGetSheet());
   }
 
   Future<void> _handleSignIn() async {
     try {
-      await _googleSignIn.signIn();
+      _client = await obtainAuthenticatedClient();
     } catch (error) {
       print(error);
     }
   }
 
-  Future<void> _handleSignOut() => _googleSignIn.disconnect();
+  Future<ServiceAccountCredentials> getCredentials() async {
+    const storage = FlutterSecureStorage();
+
+    String? credString = await storage.read(key: _credStorageKey);
+
+    if(credString == null) {
+      FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+      if (result != null && result.files.length == 1) {
+        File file = File(result.files.single.path!);
+        credString = await file.readAsString();
+        await storage.write(key: _credStorageKey, value: credString);
+      } else {
+        // User canceled the picker
+      }
+    }
+
+    final accountCredentials = ServiceAccountCredentials.fromJson(credString);
+    return accountCredentials;
+  }
+
+  Future<AuthClient> obtainAuthenticatedClient() async {
+    var accountCredentials = await getCredentials();
+    var scopes = ['https://www.googleapis.com/auth/spreadsheets'];
+
+    AuthClient client = await clientViaServiceAccount(accountCredentials, scopes);
+
+    return client; // Remember to close the client when you are finished with it.
+  }
+
 
   Future<void> _handleGetSheet() async {
-    setState(() {
-      _sheetText = 'Loading contact info...';
-    });
+    assert(_client != null, 'Authenticated client missing!');
 
-    // Retrieve an [auth.AuthClient] from the current [GoogleSignIn] instance.
-    final auth.AuthClient? client = await _googleSignIn.authenticatedClient();
-
-    assert(client != null, 'Authenticated client missing!');
-
-    final SheetsApi sheetsApi = SheetsApi(client!);
+    final SheetsApi sheetsApi = SheetsApi(_client!);
     final Spreadsheet sheet = await sheetsApi.spreadsheets.get(
         '10491Rx3qiDDSK4kRvSXOR9VWNVumRQImyeYnq7Q89-s',
         includeGridData: true,
         ranges: [
           '\'Nutrition History\'!F30:G31', // [[B lo, K lo],[B hi, K hi]]
           '\'Nutrition History\'!A3:C40', // [[Date, B, K],[Date2, B, K],...]
-          '\'Food List\'!A2:T100',
+          '\'Food List\'!A2:U100',
         ]
     );
 
     final String? sheetString = json.encode(sheet);
 
     var data = CatData.parse(sheet);
-    _kashi = data.cats[0];
-    _batman = data.cats[1];
-    _foods = data.foods;
 
     setState(() {
       if (sheetString != null) {
-        _sheetText = sheetString;
+        _data = data;
       } else {
-        _sheetText = 'No sheet to display.';
+        // _sheetText = 'No sheet to display.';
       }
     });
   }
 
   Widget _buildBody() {
-    final GoogleSignInAccount? user = _currentUser;
-
-    // return Center(child: Expanded(child: Text(_sheetText)));
-
-    if (user != null) {
+    if (_data != null) {
       return Center(
         child: Stack(children: [
           Container(
-              alignment: Alignment.topRight,
-              padding: const EdgeInsets.only(top: 10, right: 10),
-              child: PopupMenuButton(
-                  itemBuilder: (BuildContext context) =>
-                  <PopupMenuEntry>[
-                    PopupMenuItem(
-                        child: ListTile(
-                            leading: GoogleUserCircleAvatar(
-                              identity: user,
-                            ),
-                            title: Text(user.displayName ?? ''),
-                            subtitle: Text(user.email)
-                        )
-                    ),
-                    const PopupMenuDivider(),
-                    PopupMenuItem(
-                      child: const Text('Refresh'),
-                      onTap: _handleGetSheet,
-                    ),
-                    PopupMenuItem(
-                      child: const Text('Sign out', textAlign: TextAlign.center),
-                      onTap: _handleSignOut,
-                    )
-                  ])),
+            alignment: Alignment.topRight,
+            padding: const EdgeInsets.only(top: 10, right: 10),
+            child: IconButton(icon: const Icon(Icons.refresh), onPressed: _handleGetSheet,)
+          ),
           Container(
             margin: const EdgeInsets.all(50),
             child: Column(children: [
-              ProfileRow(_kashi),
+              ProfileRow(_data!.cats[0]),
               Container(height: 30),
-              ProfileRow(_batman)
+              ProfileRow(_data!.cats[1])
             ]),
           ),
           Container(
@@ -191,23 +161,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 Container(width: 10),
                 const Text("Add Meal", style: TextStyle(fontSize: 20)),
               ]),
-                onPressed: null,
-              // child: ,
+              onPressed: null,
             )
           )
         ]),
       );
     } else {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: <Widget>[
-          const Text('You are not currently signed in.'),
-          ElevatedButton(
-            child: const Text('SIGN IN'),
-            onPressed: _handleSignIn,
-          ),
-        ],
-      );
+      return const Center(child: CircularProgressIndicator());
     }
   }
 
