@@ -41,7 +41,7 @@ class LineRangeAnnotationChart extends StatelessWidget {
             labelPosition: charts.AnnotationLabelPosition.outside,
             startLabel: '190',
             endLabel: '220',
-            color: charts.Color.fromHex(code: '#DFF4DA'))
+            color: charts.Color.fromHex(code: '#BBFFBB')) //charts.Color.fromHex(code: '#DFF4DA'))
       ]),
     ],
     primaryMeasureAxis: const charts.NumericAxisSpec(

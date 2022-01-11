@@ -1,23 +1,8 @@
-import 'dart:ui';
-
-import 'package:catdiet/gaugeChart.dart';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:googleapis/sheets/v4.dart';
-import 'package:googleapis_auth/googleapis_auth.dart' as auth show AuthClient;
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'CatData.dart';
-import 'barChart.dart';
-import 'gaugeChart.dart';
 import 'line_range_annotation.dart';
-import 'package:flutter/foundation.dart';
-// import 'package:syncfusion_flutter_charts/charts.dart';
-// import 'package:syncfusion_flutter_charts/sparkcharts.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
-
-import 'barChart.dart';
 
 class ProfileRow extends StatelessWidget {
   final CatProfile profile;

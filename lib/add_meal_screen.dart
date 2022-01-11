@@ -41,7 +41,8 @@ class AddMealState extends State<AddMealScreen> {
                     child: ListView.separated(
                         scrollDirection: Axis.vertical,
                         shrinkWrap: true,
-                        separatorBuilder: (context, index) => SizedBox(height: 20),
+                        separatorBuilder: (context, index) => SizedBox(height: 10),
+                        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                         itemCount: _foods.length,
                         itemBuilder: (context, index) {
 
@@ -51,53 +52,64 @@ class AddMealState extends State<AddMealScreen> {
                               : Image.asset('assets/cat1.png');
                           var isSelected = _selectedFoods.contains(index);
 
-                          return Card(
-                              elevation: isSelected ? 10 : 5,
-                              shadowColor: isSelected ? Colors.blue : Colors.black,
-                              // color: isSelected ? Colors.blue : Colors.white,
-                              child: ListTile(
-                                  minVerticalPadding: 15,
-                                  leading: Container(
-                                    height: double.infinity,
-                                    child: img,
-                                  ),
-                                  minLeadingWidth: 100,
-                                  title: Text(
-                                      '${food.brand} ${food.variety}',
-                                      style: const TextStyle(
-                                          color: Colors.black87,
-                                          fontSize: 28,
-                                          fontFamily: 'Roboto',
-                                          fontWeight: FontWeight.w300
-                                      )),
-                                  subtitle: Text(
-                                      '${food.packageOz} oz\t${food.packageKcal} kcal',
-                                      style: const TextStyle(
-                                          color: Colors.black87,
-                                          fontSize: 14,
-                                          fontFamily: 'Roboto',
-                                          fontWeight: FontWeight.w300
-                                      )
-                                  ),
-                                  // trailing: isSelected ? Icon(Icons.check, color: Colors.blueAccent) : null,
-                                  selected: isSelected,
-                                  onTap: () {
-                                    setState(() {
-                                      isSelected
-                                          ? _selectedFoods.remove(index)
-                                          : _selectedFoods.add(index);
-                                    });
-                                  }
-                              )
-                          );
+                          return Row(children: [
+                            Expanded(
+                              flex: 9,
+                                child: Card(
+                                elevation: isSelected ? 10 : 5,
+                                shadowColor: isSelected ? Colors.blueAccent : Colors.black,
+                                color: isSelected ? Colors.blueAccent : Colors.white,
+                                child: ListTile(
+                                    minVerticalPadding: 20,
+                                    leading: Container(
+                                      height: double.infinity,
+                                      child: img,
+                                    ),
+                                    minLeadingWidth: 100,
+                                    title: Text(
+                                        '${food.brand} ${food.variety}',
+                                        style: TextStyle(
+                                            color: isSelected ? Colors.white : Colors.black87,
+                                            fontSize: 24,
+                                            fontFamily: 'Roboto',
+                                            fontWeight: FontWeight.w300
+                                        )),
+                                    subtitle: Text(
+                                        '${food.packageOz} oz\t${food.packageKcal} kcal',
+                                        style: TextStyle(
+                                            color: isSelected ? Colors.white70 : Colors.black54,
+                                            fontSize: 13.5,
+                                            fontFamily: 'Roboto',
+                                            fontWeight: FontWeight.w400
+                                        )
+                                    ),
+                                    // trailing: isSelected ? Icon(Icons.check, color: Colors.blueAccent) : null,
+                                    selected: isSelected,
+                                    onTap: () {
+                                      setState(() {
+                                        isSelected
+                                            ? _selectedFoods.remove(index)
+                                            : _selectedFoods.add(index);
+                                      });
+                                    }
+                                )
+                            )),
+                            Expanded(
+                                child: Icon(
+                                  isSelected ? Icons.play_arrow : null,
+                                  size: 40,
+                                  color: Colors.blueAccent),
+                                flex: 1)
+                          ]);
                         }
                     )),
-                SizedBox(width: 70),
+                // SizedBox(width: 30),
                 Expanded(
                   // width: MediaQuery.of(context).size.width * 0.6,
                     flex: 5,
                     child: Card(
-                        margin: EdgeInsets.only(top: 50, bottom: 50),
+                        // margin: EdgeInsets.only(top: 50, bottom: 50),
+                      margin: EdgeInsets.all(50),
                         color: Colors.white,
                         elevation: 15,
                         child: ListView.builder(
