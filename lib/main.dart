@@ -1,35 +1,18 @@
 import 'dart:io';
-import 'dart:ui';
 
-import 'package:catdiet/gaugeChart.dart';
+import 'package:catdiet/add_meal_screen.dart';
 import 'package:catdiet/profile_row.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:googleapis/sheets/v4.dart';
-import 'package:googleapis/vision/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
-import 'package:googleapis_auth/googleapis_auth.dart' as auth;
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
-import 'package:charts_flutter/flutter.dart' as charts;
 import 'CatData.dart';
-import 'barChart.dart';
-import 'gaugeChart.dart';
-import 'line_range_annotation.dart';
-import 'package:flutter/foundation.dart';
-// import 'package:syncfusion_flutter_charts/charts.dart';
-// import 'package:syncfusion_flutter_charts/sparkcharts.dart';
-import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:file_picker/file_picker.dart';
 
 void main() {
   runApp(const MyApp());
 }
-
-// final _googleSignIn = GoogleSignIn(
-//   scopes: <String>[SheetsApi.spreadsheetsScope],
-// );
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -41,7 +24,7 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.white,
+        scaffoldBackgroundColor: const HSVColor.fromAHSV(1, 0, 0, 0.95).toColor(),
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
@@ -61,6 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final String _credStorageKey = "CatDietServiceCredentials";
   AuthClient? _client;
   CatData? _data;
+  Spreadsheet? _sheet;
 
   @override
   void initState() {
@@ -90,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
         credString = await file.readAsString();
         await storage.write(key: _credStorageKey, value: credString);
       } else {
-        // User canceled the picker
+        print("Uh oh. You need a credential file!");
       }
     }
 
@@ -122,21 +106,18 @@ class _MyHomePageState extends State<MyHomePage> {
         ]
     );
 
-    final String? sheetString = json.encode(sheet);
+    // final String? sheetString = json.encode(_sheet);
 
     var data = CatData.parse(sheet);
 
     setState(() {
-      if (sheetString != null) {
-        _data = data;
-      } else {
-        // _sheetText = 'No sheet to display.';
-      }
+      _sheet = sheet;
+      _data = data;
     });
   }
 
   Widget _buildBody() {
-    if (_data != null) {
+    if (_data != null && _sheet != null) {
       return Center(
         child: Stack(children: [
           Container(
@@ -161,7 +142,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 Container(width: 10),
                 const Text("Add Meal", style: TextStyle(fontSize: 20)),
               ]),
-              onPressed: null,
+              onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AddMealScreen(sheet: _sheet!, data: _data!))
+                  );
+              },
             )
           )
         ]),

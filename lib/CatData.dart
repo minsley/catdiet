@@ -90,7 +90,7 @@ class CatData {
   static DateTime parseSerialDatetime(RowData r, int i) {
     var dt = DateTime(1900, 1, 1);
     if(r.values == null || r.values!.length < i+1) return dt;
-    return dt.add(Duration(days: r.values?.first.effectiveValue?.numberValue?.toInt() ?? 0));
+    return dt.add(Duration(days: (r.values?.first.effectiveValue?.numberValue?.toInt() ?? 2)-2));
   }
 
   static bool parseBool(RowData r, int i) {

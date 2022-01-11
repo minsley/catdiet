@@ -31,30 +31,6 @@ class ProfileRow extends StatelessWidget {
           flex: 2,
           child: Stack(
             children: [
-              // Container(
-              //   child: Image.asset('assets/cat1.png'),
-              //   padding: EdgeInsets.only(bottom: 20, left: 20),
-              //   height: 150,
-              //   width: 150,
-              // ),
-              // Container(
-              //   child: Text('Kashi', style: TextStyle(color: Colors.white, fontSize: 24)),
-              // ),
-              // SfCircularChart(
-              //     series: <CircularSeries>[
-              //       // Renders radial bar chart
-              //       RadialBarSeries<int, String>(
-              //         dataSource: [_kashi.records.last.kcal.toInt()],
-              //         xValueMapper: (data, _) => '',
-              //         yValueMapper: (data, _) => data,
-              //         pointColorMapper: (data, _) => HSLColor.lerp(HSLColor.fromColor(Colors.red), HSLColor.fromColor(Colors.green), _kashi.records.last.kcal/_kashi.targetHigh)!.toColor(),
-              //         radius: '100%',
-              //         innerRadius: '80%',
-              //         maximumValue: _kashi.targetHigh,
-              //         cornerStyle: CornerStyle.bothCurve,
-              //       )
-              //     ]
-              // ),
               SfRadialGauge(
                 // enableLoadingAnimation: true,
                 // animationDuration: 2000,
@@ -120,34 +96,11 @@ class ProfileRow extends StatelessWidget {
                         positionFactor: 0.3,
                       )
                     ],
-                    // ranges: <GaugeRange>[GaugeRange(
-                    //   startValue: 0,
-                    //   endValue: _kashi.records.last.kcal,
-                    //   color: HSLColor.lerp(
-                    //       HSLColor.fromColor(Colors.red),
-                    //       HSLColor.fromColor(Colors.green),
-                    //       (_kashi.records.last.kcal/_kashi.targetHigh).clamp(0,1)
-                    //   )!.toColor()
-                    // )],
                   )]
               )
             ],
             alignment: Alignment.center,
           )),
-      // Expanded(
-      //   child: StackedBarChart([
-      //     charts.Series<int, String>(
-      //       id: 'Daily Calories',
-      //       domainFn: (a, b) => '',
-      //       measureFn: (x, _) => x,
-      //       data: [profile.records.last.kcal.toInt()],
-      //       fillColorFn: (a, b) => charts.Color.fromHex(code: '#24B400'),
-      //       measureUpperBoundFn: (datum, index) => 400,
-      //       measureLowerBoundFn: (datum, index) => 0,
-      //
-      //     ),
-      //   ], animate: false,),
-      // ),
       Expanded(
           child: LineRangeAnnotationChart(
             [
