@@ -57,8 +57,10 @@ class CatData {
           parseString(r, 15),  // fullIngredients,
           parseUri(r, 18),  // canPicUri,
           parseUri(r, 19),  // foodPicUri
-          parseBool(r, 20)))
-      .toList() ?? []
+          parseBool(r, 20), // isInStock
+          parseDouble(r, 21), // servingsPerPackage
+          parseString(r, 22), // servingUnit
+      )).toList() ?? []
     );
   }
 
@@ -147,6 +149,8 @@ class Food {
   final Uri? canPicUri;
   final Uri? foodPicUri;
   final bool isInStock;
+  final double servingsPerPackage;
+  final String servingUnit;
 
-  Food(this.brand, this.line, this.variety, this.mainIngredients, this.shape, this.type, this.packageOz, this.packageKcal, this.packageCost, this.kcalPerKg, this.kcalPerOz, this.costPerOz, this.costPer100Kcal, this.foodNotes, this.feedingNotes, this.fullIngredients, this.canPicUri, this.foodPicUri, this.isInStock);
+  Food(this.brand, this.line, this.variety, this.mainIngredients, this.shape, this.type, this.packageOz, this.packageKcal, this.packageCost, this.kcalPerKg, this.kcalPerOz, this.costPerOz, this.costPer100Kcal, this.foodNotes, this.feedingNotes, this.fullIngredients, this.canPicUri, this.foodPicUri, this.isInStock, this.servingsPerPackage, this.servingUnit);
 }

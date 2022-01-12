@@ -1,5 +1,6 @@
 
 import 'package:catdiet/CatData.dart';
+import 'package:catdiet/meal_split_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:googleapis/sheets/v4.dart';
 
@@ -17,6 +18,18 @@ class AddMealState extends State<AddMealScreen> {
 
   List<Food> _foods = [];
   List<int> _selectedFoods = [];
+
+  void goToSplitScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => MealSplitScreen(
+        sheet: widget.sheet,
+        data: widget.data,
+        foods: _foods,
+        selectedFoods: _selectedFoods,))
+    );
+    // Navigator.pop(context);
+  }
 
   @override
   void initState() {
@@ -75,7 +88,7 @@ class AddMealState extends State<AddMealScreen> {
                                             fontWeight: FontWeight.w300
                                         )),
                                     subtitle: Text(
-                                        '${food.packageOz} oz\t${food.packageKcal} kcal',
+                                        '${food.servingUnit}\t(${food.packageOz / food.servingsPerPackage} oz)\t\t\t${food.packageKcal ~/ food.servingsPerPackage} kcal',
                                         style: TextStyle(
                                             color: isSelected ? Colors.white70 : Colors.black54,
                                             fontSize: 13.5,
@@ -108,6 +121,7 @@ class AddMealState extends State<AddMealScreen> {
                   // width: MediaQuery.of(context).size.width * 0.6,
                     flex: 5,
                     child: Card(
+                      clipBehavior: Clip.hardEdge,
                         // margin: EdgeInsets.only(top: 50, bottom: 50),
                       margin: EdgeInsets.all(50),
                         color: Colors.white,
@@ -118,25 +132,39 @@ class AddMealState extends State<AddMealScreen> {
                             itemCount: _selectedFoods.length,
                             itemBuilder: (context, index) {
                               var food = _foods[_selectedFoods[index]];
-                              return ListTile(
-                                title: Text(
-                                    '${food.brand} ${food.variety}',
-                                    style: const TextStyle(
-                                        color: Colors.black87,
-                                        fontSize: 18,
-                                        fontFamily: 'Roboto',
-                                        fontWeight: FontWeight.w300
-                                    )
+                              return Dismissible(
+                                key: ValueKey(_selectedFoods[index]),
+                                child: ListTile(
+                                  title: Text(
+                                      '${food.brand} ${food.variety}',
+                                      style: const TextStyle(
+                                          color: Colors.black87,
+                                          fontSize: 18,
+                                          fontFamily: 'Roboto',
+                                          fontWeight: FontWeight.w300
+                                      )
+                                  ),
+                                  subtitle: Text(
+                                      '${food.servingUnit}\t(${food.packageOz / food.servingsPerPackage} oz)\t\t\t${food.packageKcal ~/ food.servingsPerPackage} kcal',
+                                      style: const TextStyle(
+                                          color: Colors.black54,
+                                          fontSize: 13,
+                                          fontFamily: 'Roboto',
+                                          fontWeight: FontWeight.w300
+                                      )
+                                  ),
                                 ),
-                                subtitle: Text(
-                                    '${food.packageOz} oz\t\t\t\t${food.packageKcal} kcal',
-                                    style: const TextStyle(
-                                        color: Colors.black54,
-                                        fontSize: 13,
-                                        fontFamily: 'Roboto',
-                                        fontWeight: FontWeight.w300
-                                    )
+                                direction: DismissDirection.endToStart,
+                                background: Container(
+                                  color: Colors.red,
+                                  child: const Icon(Icons.delete, size: 50,),
+                                  alignment: Alignment.centerRight,
                                 ),
+                                onDismissed: (DismissDirection direction) {
+                                  setState(() {
+                                    _selectedFoods.removeAt(index);
+                                  });
+                                },
                               );
                             }
                         )
@@ -149,10 +177,8 @@ class AddMealState extends State<AddMealScreen> {
               margin: const EdgeInsets.only(bottom: 20, right: 20),
               child: FloatingActionButton.large(
                 child: const Icon(Icons.check, size: 80,),
-                backgroundColor: Colors.green,
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+                backgroundColor: _selectedFoods.isNotEmpty ? Colors.green : Colors.grey,
+                onPressed: () => _selectedFoods.isNotEmpty ? goToSplitScreen() : null,
               )
           )
         ])

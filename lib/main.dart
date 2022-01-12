@@ -1,14 +1,13 @@
-import 'dart:io';
-
 import 'package:catdiet/add_meal_screen.dart';
+import 'package:catdiet/cat_api.dart';
 import 'package:catdiet/profile_row.dart';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:googleapis/sheets/v4.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'CatData.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:file_picker/file_picker.dart';
+import 'dart:ui' as ui;
+
+final routeObserver = RouteObserver<ModalRoute<void>>();
 
 void main() {
   runApp(const MyApp());
@@ -24,9 +23,10 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: const HSVColor.fromAHSV(1, 0, 0, 0.95).toColor(),
+        scaffoldBackgroundColor: const ui.Color(0xFFF6F6F6)// const HSVColor.fromAHSV(1, 0, 0, 0.95).toColor(),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      navigatorObservers: [routeObserver]
     );
   }
 }
@@ -40,11 +40,11 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  final String _credStorageKey = "CatDietServiceCredentials";
+class _MyHomePageState extends State<MyHomePage> with RouteAware {
   AuthClient? _client;
   CatData? _data;
   Spreadsheet? _sheet;
+  final CatApi _api = CatApi();
 
   @override
   void initState() {
@@ -53,61 +53,36 @@ class _MyHomePageState extends State<MyHomePage> {
         .then((value) => _handleGetSheet());
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    // view will appear
+    if(_client  != null)  _handleGetSheet();
+  }
+
   Future<void> _handleSignIn() async {
     try {
-      _client = await obtainAuthenticatedClient();
+      _client = await _api.obtainAuthenticatedClient();
     } catch (error) {
       print(error);
     }
   }
 
-  Future<ServiceAccountCredentials> getCredentials() async {
-    const storage = FlutterSecureStorage();
-
-    String? credString = await storage.read(key: _credStorageKey);
-
-    if(credString == null) {
-      FilePickerResult? result = await FilePicker.platform.pickFiles();
-
-      if (result != null && result.files.length == 1) {
-        File file = File(result.files.single.path!);
-        credString = await file.readAsString();
-        await storage.write(key: _credStorageKey, value: credString);
-      } else {
-        print("Uh oh. You need a credential file!");
-      }
-    }
-
-    final accountCredentials = ServiceAccountCredentials.fromJson(credString);
-    return accountCredentials;
-  }
-
-  Future<AuthClient> obtainAuthenticatedClient() async {
-    var accountCredentials = await getCredentials();
-    var scopes = ['https://www.googleapis.com/auth/spreadsheets'];
-
-    AuthClient client = await clientViaServiceAccount(accountCredentials, scopes);
-
-    return client; // Remember to close the client when you are finished with it.
-  }
-
-
   Future<void> _handleGetSheet() async {
-    assert(_client != null, 'Authenticated client missing!');
 
-    final SheetsApi sheetsApi = SheetsApi(_client!);
-    final Spreadsheet sheet = await sheetsApi.spreadsheets.get(
-        '10491Rx3qiDDSK4kRvSXOR9VWNVumRQImyeYnq7Q89-s',
-        includeGridData: true,
-        ranges: [
-          '\'Nutrition History\'!F30:G31', // [[B lo, K lo],[B hi, K hi]]
-          '\'Nutrition History\'!A3:C40', // [[Date, B, K],[Date2, B, K],...]
-          '\'Food List\'!A2:U100',
-        ]
-    );
-
-    // final String? sheetString = json.encode(_sheet);
-
+    var sheet = await _api.getSheet();
     var data = CatData.parse(sheet);
 
     setState(() {
