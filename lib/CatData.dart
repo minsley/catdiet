@@ -18,7 +18,7 @@ class CatData {
             sheet.sheets?.first.data?.first.rowData?.first.values?.last.effectiveValue?.numberValue ?? 0,
             sheet.sheets?.first.data?.first.rowData?.last.values?.last.effectiveValue?.numberValue ?? 0,
             sheet.sheets?.first.data?.last.rowData
-                ?.where((r) => r.values?.length == 3)
+                ?.where((r) => r.values?.length == 3 && r.values?.first.effectiveValue != null)
                 .map((r) => DietRecord(
                 Cat.Kashi,
                 parseSerialDatetime(r, 0),
@@ -29,7 +29,7 @@ class CatData {
             sheet.sheets?.first.data?.first.rowData?.first.values?.first.effectiveValue?.numberValue ?? 0,
             sheet.sheets?.first.data?.first.rowData?.last.values?.first.effectiveValue?.numberValue ?? 0,
             sheet.sheets?.first.data?.last.rowData
-                ?.where((r) => r.values?.length == 3)
+                ?.where((r) => r.values?.length == 3 && r.values?.first.effectiveValue != null)
                 .map((r) => DietRecord(
                 Cat.Batman,
                 parseSerialDatetime(r, 0),

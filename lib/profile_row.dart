@@ -7,6 +7,7 @@ import 'line_range_annotation.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:intl/intl.dart' as intl;
 import 'dart:math';
+import 'package:collection/collection.dart';
 
 class ProfileRow extends StatelessWidget {
   final CatProfile profile;
@@ -14,8 +15,17 @@ class ProfileRow extends StatelessWidget {
 
   ProfileRow(this.profile, {Key? key}) : super(key: key);
 
+  bool isTodaysRecord(DietRecord r) {
+    var now = DateTime.now();
+    return DateTime(r.datetime.year, r.datetime.month, r.datetime.day)
+        .difference(DateTime(now.year, now.month, now.day))
+        .inDays == 0;
+  }
+
   @override
   Widget build(BuildContext context) {
+    var currentKcals = profile.records.lastWhereOrNull(isTodaysRecord)?.kcal ?? 0;
+
     return Expanded(child: Row(children: [
       Expanded(
         flex: 3,
@@ -96,7 +106,7 @@ class ProfileRow extends StatelessWidget {
               sfChart.SfCircularChart(
                 series: [sfChart.RadialBarSeries(
                   maximumValue: profile.targetHigh,
-                  dataSource: [profile.records.last.kcal],
+                  dataSource: [currentKcals],
                   xValueMapper: (datum, index) => index,
                   yValueMapper: (datum, index) => datum,
                   cornerStyle: sfChart.CornerStyle.bothCurve,
@@ -105,7 +115,7 @@ class ProfileRow extends StatelessWidget {
                   pointColorMapper: (datum, index) => HSLColor.lerp(
                       HSLColor.fromColor(const Color(0xFFBF1406)),
                       HSLColor.fromColor(const Color(0xFF1A7341)),
-                      (profile.records.last.kcal/profile.targetHigh).clamp(0,1)
+                      (currentKcals/profile.targetHigh).clamp(0,1)
                   )!.toColor(),
                   // pointColorMapper: (datum, index) => Color.lerp(
                   //     Colors.redAccent,
@@ -127,7 +137,7 @@ class ProfileRow extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '${profile.records.last.kcal.toInt()} / ${profile.targetLow.toInt()}',
+                                '${currentKcals.toInt()} / ${profile.targetLow.toInt()}',
                                 style: const TextStyle(
                                   color: Color(0xFF555555),
                                   fontSize: 14,
